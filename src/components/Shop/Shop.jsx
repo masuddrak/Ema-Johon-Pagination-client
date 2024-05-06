@@ -3,17 +3,40 @@ import { addToDb, deleteShoppingCart, getShoppingCart } from '../../utilities/fa
 import Cart from '../Cart/Cart';
 import Product from '../Product/Product';
 import './Shop.css';
-import { Link } from 'react-router-dom';
+import { Link, useLoaderData } from 'react-router-dom';
 
 const Shop = () => {
     const [products, setProducts] = useState([]);
     const [cart, setCart] = useState([])
 
+
+    const [pageItems, setPageItems] = useState(10)
+    const [currentPage, setCurrentPage] = useState(0)
+    const { count } = useLoaderData()
+    const pages = Math.ceil(count / pageItems)
+    const totalPages = [...Array(pages).keys()]
+    // handle pagination
+
+    const handelPages = (e) => {
+        console.log(e.target.value)
+        const parsPage = parseInt(e.target.value)
+        setPageItems(parsPage)
+        setCurrentPage(0)
+    }
+    const handelPrev=()=>{
+        if(currentPage>0)
+        setCurrentPage(currentPage-1)
+    }
+    const handelNext=()=>{
+       if(currentPage<totalPages.length-1){
+           setCurrentPage(currentPage+1)
+       }
+    }
     useEffect(() => {
-        fetch('http://localhost:5000/products')
+        fetch(`http://localhost:5000/products?page=${currentPage}&size=${pageItems}`)
             .then(res => res.json())
             .then(data => setProducts(data))
-    }, []);
+    }, [currentPage,pageItems]);
 
     useEffect(() => {
         const storedCart = getShoppingCart();
@@ -81,6 +104,21 @@ const Shop = () => {
                         <button className='btn-proceed'>Review Order</button>
                     </Link>
                 </Cart>
+            </div>
+            {/* create pages */}
+
+            <div>
+                <button onClick={handelPrev}>pre</button>
+                {
+                    totalPages.map(page => <button className={currentPage == page && "selected"} onClick={() => setCurrentPage(page)} key={page}>{page}</button>)
+                }
+                <select value={pageItems} onChange={handelPages} id="">
+                    <option value="5">5</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="40">40</option>
+                </select>
+                <button onClick={handelNext}>next</button>
             </div>
         </div>
     );
